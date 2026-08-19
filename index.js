@@ -8,6 +8,11 @@ const geminiProvider = new OpenAIProvider({
     useResponses: false,
 });
 
+const weatherOutputSchema = z.object({
+    location: z.string().describe("The location of the weather data."),
+    temp_C: z.number().describe("The temperature in Celsius.")
+});
+
 const historyFunFactTool = tool({
     name: "history_fun_fact",
     description: "Use this tool to get a fun fact about ancient life.",
@@ -35,13 +40,10 @@ const weatherTool = tool({
         const data = await response.json();
 
         const current = data.current_condition[0];
-
         return JSON.stringify({
             location: city,
             temp_C: current.temp_C,
-            temp_F: current.temp_F,
-            weather: current.weatherDesc[0].value,
-            humidity: current.humidity,
+            // humidity: current.humidity,
         });
     },
 });
@@ -49,8 +51,9 @@ const weatherTool = tool({
 const agent = new Agent({
     name: "Gemini Agent",
     instructions: "You are a helpful assistant.",
-    model: await geminiProvider.getModel("gemini-2.5-flash"),
+    model: await geminiProvider.getModel("gemini-3.1-flash-lite"),
     tools: [historyFunFactTool, weatherTool],
+    outputType: weatherOutputSchema,
 });
 
 const result = await run(
